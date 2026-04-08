@@ -3,55 +3,569 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Creative Note REST</title>
+  <title>Creative Note</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
+    /* ── Design tokens ─────────────────────────────────────────────── */
+    :root {
+      --brand:       #E26B0A;
+      --brand-light: #FCE4D6;
+      --brand-dark:  #B85500;
+      --text:        #1A1A1A;
+      --text-mid:    #5A5A5A;
+      --text-light:  #9A9A9A;
+      --surface:     #FAFAF8;
+      --card:        #FFFFFF;
+      --border:      #E8E4DF;
+      --radius:      14px;
+      --shadow:      0 2px 16px rgba(0,0,0,0.07);
+      --shadow-lg:   0 8px 40px rgba(0,0,0,0.12);
+    }
+
+    /* ── Reset ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: Inter, Arial, sans-serif;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ────────────────────────────────────────────────────── */
+    .app-header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-series-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.15rem;
+      color: var(--brand);
+      letter-spacing: -0.01em;
+    }
+
+    .header-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--brand);
+      opacity: 0.35;
+    }
+
+    .header-app-name {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-light);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      background: #fafafa;
-      color: #171717;
+      color: var(--text-mid);
+      transition: background 0.15s;
     }
-    .card {
-      background: #fff;
-      border: 1px solid #e9e9e9;
-      border-radius: 16px;
-      padding: 48px 40px;
-      text-align: center;
-      max-width: 400px;
+    .btn-icon:hover { background: var(--brand-light); color: var(--brand); }
+
+    /* ── Main content ───────────────────────────────────────────────── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 28px 20px 32px;
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto;
     }
-    h1 { color: #f47c20; margin: 0 0 12px; }
-    p { color: #666; margin: 0; }
+
+    /* ── Greeting ──────────────────────────────────────────────────── */
+    .greeting {
+      margin-bottom: 28px;
+    }
+
+    .greeting-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-light);
+      margin-bottom: 4px;
+    }
+
+    .greeting-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.9rem;
+      line-height: 1.15;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .greeting-title em {
+      color: var(--brand);
+      font-style: italic;
+    }
+
+    /* ── Primary action card ────────────────────────────────────────── */
+    .action-primary {
+      background: var(--brand);
+      border-radius: var(--radius);
+      padding: 22px 22px 20px;
+      margin-bottom: 14px;
+      cursor: pointer;
+      border: none;
+      width: 100%;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 4px 20px rgba(226,107,10,0.3);
+      transition: transform 0.15s, box-shadow 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .action-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(226,107,10,0.38);
+    }
+
+    .action-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 3px 14px rgba(226,107,10,0.28);
+    }
+
+    .action-primary-text {}
+
+    .action-primary-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 3px;
+    }
+
+    .action-primary-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.45rem;
+      color: #FFFFFF;
+      line-height: 1.1;
+    }
+
+    .action-primary-icon {
+      width: 44px;
+      height: 44px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .action-primary-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: #FFFFFF;
+    }
+
+    /* ── Secondary action cards ─────────────────────────────────────── */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .action-secondary {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 16px;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .action-secondary:hover {
+      border-color: var(--brand);
+      box-shadow: var(--shadow);
+    }
+
+    .action-secondary-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--brand-light);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .action-secondary-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--brand);
+    }
+
+    .action-secondary-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-light);
+    }
+
+    .action-secondary-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .stub-badge {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: var(--brand-light);
+      color: var(--brand);
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-top: 2px;
+    }
+
+    /* ── Status strip ───────────────────────────────────────────────── */
+    .status-strip {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #C5C5C5;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+
+    .status-dot.ready { background: #4CAF50; }
+
+    .status-text {
+      font-size: 0.8rem;
+      color: var(--text-mid);
+    }
+
+    /* ── Bridging overlay ───────────────────────────────────────────── */
+    .bridge-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--brand);
+      z-index: 9999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .bridge-overlay.active {
+      display: flex;
+    }
+
+    .bridge-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #FFFFFF;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .bridge-text {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+      color: #FFFFFF;
+      letter-spacing: -0.01em;
+    }
+
+    .bridge-sub {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.65);
+      margin-top: -12px;
+    }
+
+    /* ── Error banner ───────────────────────────────────────────────── */
+    #error-banner {
+      display: none;
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 0.82rem;
+      color: #DC2626;
+    }
+
+    /* ── Hide Botpress bubble via CSS ───────────────────────────────── */
+    #bp-web-widget-container,
+    .bpw-floating-button,
+    [class*="bp-widget-web"],
+    div[id^="botpress-webchat"] > div:first-child {
+      /* Hide the default FAB -- we trigger open() ourselves */
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Login successful</h1>
-    <p>Main menu coming soon.</p>
+
+  <!-- Bridging overlay (shown while navigating to session entry) -->
+  <div class="bridge-overlay" id="bridge-overlay" role="status" aria-live="polite">
+    <div class="bridge-spinner"></div>
+    <div class="bridge-text">Starting lesson...</div>
+    <div class="bridge-sub">Getting things ready</div>
   </div>
 
+  <!-- App header -->
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="header-series-name" id="series-name">Creative Note</span>
+      <span class="header-dot"></span>
+      <span class="header-app-name">Teacher</span>
+    </div>
+    <div class="header-right">
+      <!-- Account icon -->
+      <button class="btn-icon" aria-label="Account" onclick="goAccount()">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <div id="error-banner"></div>
+
+    <!-- Greeting -->
+    <div class="greeting">
+      <div class="greeting-label">Good to see you</div>
+      <h1 class="greeting-title">Ready to teach<em>?</em></h1>
+    </div>
+
+    <!-- Open Lesson -- primary action -->
+    <button class="action-primary" id="btn-open-lesson" onclick="openLesson()" aria-label="Open a lesson">
+      <div class="action-primary-text">
+        <div class="action-primary-label">Start your session</div>
+        <div class="action-primary-title">Open Lesson</div>
+      </div>
+      <div class="action-primary-icon">
+        <!-- Music note icon -->
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 18V6l12-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm12-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+        </svg>
+      </div>
+    </button>
+
+    <!-- Secondary actions -->
+    <div class="action-grid">
+
+      <!-- Students stub -->
+      <button class="action-secondary" onclick="goStudents()" aria-label="Student management">
+        <div class="action-secondary-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M12 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div>
+          <div class="action-secondary-label">Manage</div>
+          <div class="action-secondary-title">Students</div>
+          <span class="stub-badge">Coming soon</span>
+        </div>
+      </button>
+
+      <!-- Account stub -->
+      <button class="action-secondary" onclick="goAccount()" aria-label="Account management">
+        <div class="action-secondary-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="action-secondary-label">Manage</div>
+          <div class="action-secondary-title">Account</div>
+          <span class="stub-badge">Coming soon</span>
+        </div>
+      </button>
+
+    </div>
+
+    <!-- Status strip -->
+    <div class="status-strip">
+      <div class="status-dot" id="status-dot"></div>
+      <div class="status-text" id="status-text">Connecting assistant...</div>
+    </div>
+
+  </main>
+
+  <!-- Botpress webchat v3 (hidden bubble mode) -->
+  <script src="https://cdn.botpress.cloud/webchat/v3.6/inject.js"></script>
+  <script src="https://files.bpcontent.cloud/2026/03/15/13/20260315134724-0XEAYKX2.js" defer></script>
+
+  <!-- App logic -->
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    import { requireAuth, applyBranding, showError } from '/assets/app.js';
 
-    const supabase = createClient(
-      'https://xaayekfrlphyyxenhcjl.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYXlla2ZybHBoeXl4ZW5oY2psIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1MTYwMjAsImV4cCI6MjA4OTA5MjAyMH0.dNSck8DCC3p-qarBO4afSl4jJnHyv3DKT04AFg67Tgw'
-    );
+    // ── Auth guard ──────────────────────────────────────────────────
+    await requireAuth();
 
-    const { data: { session } } = await supabase.auth.getSession();
+    // ── Apply series branding ────────────────────────────────────────
+    applyBranding();
 
-    if (!session) {
-      const slug = sessionStorage.getItem('series_slug') || 'wunderkeys';
-      window.location.href = '/' + slug + '/';
-    } else {
-      const teacherId = sessionStorage.getItem('teacher_id');
-      const seriesSlug = sessionStorage.getItem('series_slug');
-      document.querySelector('p').textContent = 
-        'Logged in as teacher ' + teacherId + ' (' + seriesSlug + ')';
+    // ── Update series name in header ─────────────────────────────────
+    const seriesSlug = sessionStorage.getItem('series_slug') || '';
+    if (seriesSlug) {
+      const nameMap = { wunderkeys: 'WunderKeys' };
+      const el = document.getElementById('series-name');
+      if (el && nameMap[seriesSlug]) el.textContent = nameMap[seriesSlug];
     }
+
+    // ── Botpress init handoff ────────────────────────────────────────
+    // Wait for webchat to initialise, then send teacher context and
+    // mark the assistant status indicator as ready.
+    const teacherId = sessionStorage.getItem('teacher_id') || '';
+
+    function onBotpressReady() {
+      // Fire auth context to Botpress so all flows have teacher_id
+      if (window.botpress) {
+        window.botpress.sendEvent({
+          type: 'trigger',
+          channel: 'web',
+          payload: {
+            action: 'creative_note_auth_complete',
+            teacher_id: teacherId
+          }
+        });
+      }
+
+      // Mark status indicator ready
+      const dot  = document.getElementById('status-dot');
+      const text = document.getElementById('status-text');
+      if (dot)  dot.classList.add('ready');
+      if (text) text.textContent = 'Assistant ready';
+    }
+
+    if (window.botpress) {
+      window.botpress.on('webchat:initialized', () => {
+        // Small delay to ensure widget internals are settled
+        setTimeout(onBotpressReady, 300);
+      });
+    }
+
+    // Fallback: if botpress loads after this module runs
+    window.addEventListener('load', () => {
+      if (window.botpress) {
+        window.botpress.on('webchat:initialized', () => {
+          setTimeout(onBotpressReady, 300);
+        });
+      }
+    });
+
+    // ── Listen for session_open event from Botpress ──────────────────
+    // When Session Open Flow completes, it fires a Send Custom Event
+    // card with action: 'creative_note_session_open'.
+    // We show the bridging overlay and navigate to session_entry.html.
+    window.addEventListener('message', (event) => {
+      if (!event.data || event.data.action !== 'creative_note_session_open') return;
+
+      // Show bridging overlay
+      const overlay = document.getElementById('bridge-overlay');
+      if (overlay) overlay.classList.add('active');
+
+      // Close the Botpress panel cleanly
+      if (window.botpress) {
+        try { window.botpress.close(); } catch(e) { /* ignore */ }
+      }
+
+      // Navigate to session entry page
+      // Small delay lets the overlay render before navigation
+      setTimeout(() => {
+        window.location.href = '/session_entry.html';
+      }, 600);
+    });
+
+    // ── Navigation stubs ─────────────────────────────────────────────
+    window.openLesson = function() {
+      if (window.botpress) {
+        window.botpress.open();
+      } else {
+        showError('error-banner', 'Assistant is not ready yet. Please wait a moment and try again.');
+      }
+    };
+
+    window.goStudents = function() {
+      // Stub -- student management page not yet built
+      // window.location.href = '/students.html';
+      console.log('Students: not yet built');
+    };
+
+    window.goAccount = function() {
+      // Stub -- account page not yet built
+      // window.location.href = '/account.html';
+      console.log('Account: not yet built');
+    };
+
   </script>
+
 </body>
 </html>
