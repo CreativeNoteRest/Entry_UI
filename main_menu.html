@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
-    /* ── Design tokens ─────────────────────────────────────────────── */
     :root {
       --brand:       #E26B0A;
       --brand-light: #FCE4D6;
@@ -24,7 +23,6 @@
       --shadow-lg:   0 8px 40px rgba(0,0,0,0.12);
     }
 
-    /* ── Reset ─────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -36,7 +34,6 @@
       flex-direction: column;
     }
 
-    /* ── Header ────────────────────────────────────────────────────── */
     .app-header {
       background: var(--card);
       border-bottom: 1px solid var(--border);
@@ -100,7 +97,6 @@
     }
     .btn-icon:hover { background: var(--brand-light); color: var(--brand); }
 
-    /* ── Main content ───────────────────────────────────────────────── */
     .main {
       flex: 1;
       display: flex;
@@ -111,10 +107,7 @@
       margin: 0 auto;
     }
 
-    /* ── Greeting ──────────────────────────────────────────────────── */
-    .greeting {
-      margin-bottom: 28px;
-    }
+    .greeting { margin-bottom: 28px; }
 
     .greeting-label {
       font-size: 0.72rem;
@@ -133,12 +126,8 @@
       letter-spacing: -0.02em;
     }
 
-    .greeting-title em {
-      color: var(--brand);
-      font-style: italic;
-    }
+    .greeting-title em { color: var(--brand); font-style: italic; }
 
-    /* ── Primary action card ────────────────────────────────────────── */
     .action-primary {
       background: var(--brand);
       border-radius: var(--radius);
@@ -167,8 +156,6 @@
       box-shadow: 0 3px 14px rgba(226,107,10,0.28);
     }
 
-    .action-primary-text {}
-
     .action-primary-label {
       font-size: 0.7rem;
       font-weight: 600;
@@ -196,13 +183,8 @@
       flex-shrink: 0;
     }
 
-    .action-primary-icon svg {
-      width: 22px;
-      height: 22px;
-      fill: #FFFFFF;
-    }
+    .action-primary-icon svg { width: 22px; height: 22px; fill: #FFFFFF; }
 
-    /* ── Secondary action cards ─────────────────────────────────────── */
     .action-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -239,11 +221,7 @@
       justify-content: center;
     }
 
-    .action-secondary-icon svg {
-      width: 18px;
-      height: 18px;
-      fill: var(--brand);
-    }
+    .action-secondary-icon svg { width: 18px; height: 18px; fill: var(--brand); }
 
     .action-secondary-label {
       font-size: 0.7rem;
@@ -273,7 +251,6 @@
       margin-top: 2px;
     }
 
-    /* ── Status strip ───────────────────────────────────────────────── */
     .status-strip {
       background: var(--card);
       border: 1px solid var(--border);
@@ -295,12 +272,8 @@
 
     .status-dot.ready { background: #4CAF50; }
 
-    .status-text {
-      font-size: 0.8rem;
-      color: var(--text-mid);
-    }
+    .status-text { font-size: 0.8rem; color: var(--text-mid); }
 
-    /* ── Bridging overlay ───────────────────────────────────────────── */
     .bridge-overlay {
       display: none;
       position: fixed;
@@ -313,9 +286,7 @@
       gap: 20px;
     }
 
-    .bridge-overlay.active {
-      display: flex;
-    }
+    .bridge-overlay.active { display: flex; }
 
     .bridge-spinner {
       width: 40px;
@@ -326,9 +297,7 @@
       animation: spin 0.8s linear infinite;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     .bridge-text {
       font-family: 'DM Serif Display', serif;
@@ -343,7 +312,6 @@
       margin-top: -12px;
     }
 
-    /* ── Error banner ───────────────────────────────────────────────── */
     #error-banner {
       display: none;
       background: #FEF2F2;
@@ -354,26 +322,16 @@
       font-size: 0.82rem;
       color: #DC2626;
     }
-
-    /* ── Hide Botpress bubble via CSS ───────────────────────────────── */
-    #bp-web-widget-container,
-    .bpw-floating-button,
-    [class*="bp-widget-web"],
-    div[id^="botpress-webchat"] > div:first-child {
-      /* Hide the default FAB -- we trigger open() ourselves */
-    }
   </style>
 </head>
 <body>
 
-  <!-- Bridging overlay (shown while navigating to session entry) -->
   <div class="bridge-overlay" id="bridge-overlay" role="status" aria-live="polite">
     <div class="bridge-spinner"></div>
     <div class="bridge-text">Starting lesson...</div>
     <div class="bridge-sub">Getting things ready</div>
   </div>
 
-  <!-- App header -->
   <header class="app-header">
     <div class="header-brand">
       <span class="header-series-name" id="series-name">Creative Note</span>
@@ -381,7 +339,6 @@
       <span class="header-app-name">Teacher</span>
     </div>
     <div class="header-right">
-      <!-- Account icon -->
       <button class="btn-icon" aria-label="Account" onclick="goAccount()">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="8" r="4"/>
@@ -391,35 +348,29 @@
     </div>
   </header>
 
-  <!-- Main content -->
   <main class="main">
 
     <div id="error-banner"></div>
 
-    <!-- Greeting -->
     <div class="greeting">
       <div class="greeting-label">Good to see you</div>
       <h1 class="greeting-title">Ready to teach<em>?</em></h1>
     </div>
 
-    <!-- Open Lesson -- primary action -->
     <button class="action-primary" id="btn-open-lesson" onclick="openLesson()" aria-label="Open a lesson">
-      <div class="action-primary-text">
+      <div>
         <div class="action-primary-label">Start your session</div>
         <div class="action-primary-title">Open Lesson</div>
       </div>
       <div class="action-primary-icon">
-        <!-- Music note icon -->
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M9 18V6l12-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm12-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
         </svg>
       </div>
     </button>
 
-    <!-- Secondary actions -->
     <div class="action-grid">
 
-      <!-- Students stub -->
       <button class="action-secondary" onclick="goStudents()" aria-label="Student management">
         <div class="action-secondary-icon">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -433,7 +384,6 @@
         </div>
       </button>
 
-      <!-- Account stub -->
       <button class="action-secondary" onclick="goAccount()" aria-label="Account management">
         <div class="action-secondary-icon">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -450,7 +400,6 @@
 
     </div>
 
-    <!-- Status strip -->
     <div class="status-strip">
       <div class="status-dot" id="status-dot"></div>
       <div class="status-text" id="status-text">Connecting assistant...</div>
@@ -458,11 +407,10 @@
 
   </main>
 
-  <!-- Botpress webchat v3 (hidden bubble mode) -->
+  <!-- Botpress webchat v3 -->
   <script src="https://cdn.botpress.cloud/webchat/v3.6/inject.js"></script>
   <script src="https://files.bpcontent.cloud/2026/03/15/13/20260315134724-0XEAYKX2.js" defer></script>
 
-  <!-- App logic -->
   <script type="module">
     import { requireAuth, applyBranding, showError } from '/assets/app.js';
 
@@ -480,34 +428,24 @@
       if (el && nameMap[seriesSlug]) el.textContent = nameMap[seriesSlug];
     }
 
-    // ── Botpress init handoff ────────────────────────────────────────
-    // Wait for webchat to initialise, then send teacher context and
-    // mark the assistant status indicator as ready.
+    // ── Botpress ready handler ───────────────────────────────────────
     const teacherId = sessionStorage.getItem('teacher_id') || '';
 
     function onBotpressReady() {
-      // Fire auth context to Botpress so all flows have teacher_id
-      if (window.botpress) {
-        window.botpress.sendEvent({
-          type: 'trigger',
-          channel: 'web',
-          payload: {
-            action: 'creative_note_auth_complete',
-            teacher_id: teacherId
-          }
-        });
-      }
-
       // Mark status indicator ready
       const dot  = document.getElementById('status-dot');
       const text = document.getElementById('status-text');
       if (dot)  dot.classList.add('ready');
       if (text) text.textContent = 'Assistant ready';
+
+      // Reset conversation on close so next open is always a clean slate
+      window.botpress.on('webchat:closed', () => {
+        window.botpress.restartConversation();
+      });
     }
 
     if (window.botpress) {
       window.botpress.on('webchat:initialized', () => {
-        // Small delay to ensure widget internals are settled
         setTimeout(onBotpressReady, 300);
       });
     }
@@ -521,50 +459,42 @@
       }
     });
 
-    // ── Listen for session_open event from Botpress ──────────────────
-    // When Session Open Flow completes, it fires a Send Custom Event
-    // card with action: 'creative_note_session_open'.
-    // We show the bridging overlay and navigate to session_entry.html.
+    // ── Listen for session open event from Botpress ──────────────────
     window.addEventListener('message', (event) => {
       if (!event.data || event.data.action !== 'creative_note_session_open') return;
 
-      // Show bridging overlay
       const overlay = document.getElementById('bridge-overlay');
       if (overlay) overlay.classList.add('active');
 
-      // Close the Botpress panel cleanly
       if (window.botpress) {
         try { window.botpress.close(); } catch(e) { /* ignore */ }
       }
 
-      // Navigate to session entry page
-      // Small delay lets the overlay render before navigation
       setTimeout(() => {
         window.location.href = '/session_entry.html';
       }, 600);
     });
 
-    // ── Navigation stubs ─────────────────────────────────────────────
+    // ── Navigation ───────────────────────────────────────────────────
     window.openLesson = function() {
-     if (window.botpress) {
+      if (window.botpress) {
         window.botpress.open();
         window.botpress.on('webchat:opened', () => {
-        window.botpress.sendMessage('open_lesson');
-       });
+          window.botpress.sendEvent({
+            action: 'open_lesson',
+            teacher_id: sessionStorage.getItem('teacher_id') || ''
+          });
+        });
       } else {
-      showError('error-banner', 'Assistant is not ready yet. Please wait a moment and try again.');
+        showError('error-banner', 'Assistant is not ready yet. Please wait a moment and try again.');
       }
     };
 
     window.goStudents = function() {
-      // Stub -- student management page not yet built
-      // window.location.href = '/students.html';
       console.log('Students: not yet built');
     };
 
     window.goAccount = function() {
-      // Stub -- account page not yet built
-      // window.location.href = '/account.html';
       console.log('Account: not yet built');
     };
 
