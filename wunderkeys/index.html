@@ -186,6 +186,11 @@
       <label for="email">Email address</label>
       <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
 
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+        <input type="checkbox" id="remember-me" checked style="width:auto; height:auto; margin-bottom:0; accent-color:var(--color-accent); cursor:pointer;" />
+        <label for="remember-me" style="font-size:0.88rem; font-weight:400; color:var(--color-muted); margin-bottom:0; cursor:pointer;">Remember my email address</label>
+      </div>
+
       <button class="btn" id="btn-send">Send login code</button>
     </div>
 
@@ -227,6 +232,19 @@
     const errorEmail = document.getElementById('error-email');
     const errorCode = document.getElementById('error-code');
     const codeDescription = document.getElementById('code-description');
+    const rememberMe = document.getElementById('remember-me');
+
+    // Remember Me -- prefill on load
+    const savedEmail = localStorage.getItem('cn_remembered_email');
+    if (savedEmail) {
+      emailInput.value = savedEmail;
+      rememberMe.checked = true;
+    }
+
+    // Auto-submit when 6 digits entered in code field
+    codeInput.addEventListener('input', () => {
+      if (codeInput.value.trim().length === 6) btnVerify.click();
+    });
 
     function showError(el, message) {
       el.textContent = message;
@@ -250,6 +268,13 @@
 
       btnSend.disabled = true;
       btnSend.textContent = 'Sending...';
+
+      // Remember Me -- save or clear before sending
+      if (rememberMe.checked) {
+        localStorage.setItem('cn_remembered_email', email);
+      } else {
+        localStorage.removeItem('cn_remembered_email');
+      }
 
       const { error } = await supabase.auth.signInWithOtp({
         email,
