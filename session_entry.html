@@ -427,32 +427,53 @@
 
   function calcPurgeAfter() {
     // Build "tonight at 02:00" in the teacher's IANA timezone, return as UTC ISO string.
+    // Strategy: find today's date in teacher timezone, construct 02:00 local,
+    // then calculate the UTC equivalent by comparing two Date objects.
     const now = new Date();
 
+    // Get today's date components in the teacher's timezone
     const parts = new Intl.DateTimeFormat('en-CA', {
       timeZone: teacherTimezone,
-      year: 'numeric', month: '2-digit', day: '2-digit'
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
     }).formatToParts(now);
 
     const y = parts.find(p => p.type === 'year').value;
     const m = parts.find(p => p.type === 'month').value;
-    const d = parseInt(parts.find(p => p.type === 'day').value, 10);
+    const d = parts.find(p => p.type === 'day').value;
 
-    const offsetPart = new Intl.DateTimeFormat('en-CA', {
-      timeZone: teacherTimezone,
-      timeZoneName: 'shortOffset'
-    }).formatToParts(now).find(p => p.type === 'timeZoneName').value;
+    // Build a UTC Date that represents midnight in the teacher's timezone today,
+    // by finding the difference between local midnight (UTC) and teacher midnight.
+    // Simpler approach: use the timezone-aware formatter to find what UTC time
+    // corresponds to 02:00 in the teacher's timezone today.
 
+    // Format a reference point: what does 02:00 UTC look like in teacher timezone?
+    // We iterate: start from today's date at 02:00 UTC and adjust.
+    // Cleanest reliable approach: construct the date string and use Intl to resolve it.
 
+    // Build candidate: today at 02:00 in teacher local time
+    // We express this as a UTC timestamp by computing the offset directly.
+    // Offset = UTC_time - local_time for the same instant.
+    const localMidnightUTC = Date.UTC(
+      parseInt(y), parseInt(m) - 1, parseInt(d), 0, 0, 0
+    );
 
-    // Tonight at 02:00 in teacher timezone -- same value for all entries in a session
-    const todayDay = String(d).padStart(2, '0');
-    const isoStr = `${y}-${m}-${todayDay}T02:00:00${offsetPart.replace('GMT', '')}`;
-    const result = new Date(isoStr);
+    // Find what UTC hour corresponds to 02:00 in teacher timezone on this date.
+    // We do this by checking each UTC hour until the teacher-local hour equals 2.
+    let target = null;
+    for (let h = 0; h < 30; h++) {
+      const candidate = new Date(localMidnightUTC + h * 3600000);
+      const localHour = parseInt(
+        new Intl.DateTimeFormat('en-CA', {
+          timeZone: teacherTimezone,
+          hour: '2-digit', minute: '2-digit', hour12: false
+        }).formatToParts(candidate).find(p => p.type === 'hour').value
+      );
+      if (localHour === 2) { target = candidate; break; }
+    }
 
-    return isNaN(result.getTime())
-      ? new Date(Date.now() + 20 * 60 * 60 * 1000).toISOString()
-      : result.toISOString();
+    return target ? target.toISOString()
+      : new Date(Date.now() + 26 * 3600000).toISOString(); // safe fallback
   }
 
   // 5. Entry sequence tracking
@@ -466,6 +487,7 @@
       .order('entry_sequence', { ascending: false })
       .limit(1);
 
+    console.log('DEBUG sequence query -- data:', data, 'error:', error);
     if (!error && data && data.length > 0) {
       nextSequence = data[0].entry_sequence + 1;
       await loadExistingEntries();
@@ -483,6 +505,7 @@
       .eq('entry_source', 'teacher')
       .order('entry_sequence', { ascending: true });
 
+    console.log('DEBUG loadExistingEntries -- data:', data, 'error:', error);
     if (error || !data) return;
     data.forEach(row => appendEntryToLog(row.entry_text, row.created_at));
   }
