@@ -125,6 +125,30 @@
       color: var(--text-primary);
     }
 
+    .entry-item {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .entry-item:active {
+      opacity: 0.75;
+    }
+
+    .entry-ignored {
+      background: #F2F2F0;
+      border-color: #D8D4CF;
+      opacity: 0.6;
+    }
+
+    .entry-ignored .entry-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .entry-ignored .entry-timestamp {
+      color: #C0BAB4;
+    }
+
     /* ── Entry counter ────────────────────────────────────────── */
     .entry-counter {
       flex-shrink: 0;
@@ -502,31 +526,72 @@
   async function loadExistingEntries() {
     const { data, error } = await supabase
       .from('session_entries')
-      .select('entry_sequence, entry_text, created_at')
+      .select('entry_id, entry_sequence, entry_text, created_at')
       .eq('session_id', sessionId)
       .eq('entry_source', 'teacher')
       .order('entry_sequence', { ascending: true });
 
     if (error || !data) return;
-    data.forEach(row => appendEntryToLog(row.entry_text, row.created_at));
+    data.forEach(row => appendEntryToLog(row.entry_text, row.created_at, row.entry_id, row.entry_sequence));
   }
 
   // 7. Entry log rendering
-  function appendEntryToLog(text, isoTimestamp) {
+  function appendEntryToLog(text, isoTimestamp, entryId, sequence) {
     const opts = { hour: '2-digit', minute: '2-digit', timeZone: teacherTimezone };
     const time = isoTimestamp
       ? new Date(isoTimestamp).toLocaleTimeString('en-CA', opts)
       : new Date().toLocaleTimeString('en-CA', opts);
 
+    const isIgnored = text.startsWith('[IGNORE] ');
+    const displayText = isIgnored ? text.slice(9) : text;
+    const seqLabel = sequence ? '#' + sequence + '  ' : '';
+
     const item = document.createElement('div');
-    item.className = 'entry-item';
+    item.className = 'entry-item' + (isIgnored ? ' entry-ignored' : '');
+    item.dataset.entryId = entryId || '';
+    item.dataset.sequence = sequence || '';
+    item.dataset.ignored = isIgnored ? 'true' : 'false';
     item.innerHTML = `
-      <div class="entry-timestamp">${time}</div>
-      <div class="entry-text">${escapeHtml(text)}</div>
+      <div class="entry-timestamp">${seqLabel}${time}</div>
+      <div class="entry-text">${escapeHtml(displayText)}</div>
     `;
+    if (entryId) {
+      item.addEventListener('click', () => toggleIgnore(item));
+    }
     entryLog.appendChild(item);
     entryLog.scrollTop = entryLog.scrollHeight;
     updateCounter();
+  }
+
+  async function toggleIgnore(item) {
+    const entryId = item.dataset.entryId;
+    if (!entryId) return;
+
+    const isIgnored = item.dataset.ignored === 'true';
+    const textEl = item.querySelector('.entry-text');
+    const currentText = textEl.textContent;
+
+    const newText = isIgnored
+      ? currentText                      // removing [IGNORE]
+      : '[IGNORE] ' + currentText;       // adding [IGNORE]
+
+    const { error } = await supabase
+      .from('session_entries')
+      .update({ entry_text: newText })
+      .eq('entry_id', entryId);
+
+    if (error) {
+      showStatus('Could not update entry. Please try again.', 'error', true);
+      return;
+    }
+
+    if (isIgnored) {
+      item.classList.remove('entry-ignored');
+      item.dataset.ignored = 'false';
+    } else {
+      item.classList.add('entry-ignored');
+      item.dataset.ignored = 'true';
+    }
   }
 
   function escapeHtml(str) {
@@ -593,7 +658,15 @@
     }
 
     nextSequence++;
-    appendEntryToLog(text);
+    // Fetch the entry_id of the row we just inserted so the card supports ignore toggle
+    const { data: inserted } = await supabase
+      .from('session_entries')
+      .select('entry_id')
+      .eq('session_id', sessionId)
+      .eq('entry_sequence', nextSequence - 1)
+      .single();
+
+    appendEntryToLog(text, null, inserted?.entry_id, nextSequence - 1);
     return true;
   }
 
