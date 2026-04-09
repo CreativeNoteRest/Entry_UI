@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Students</title>
+
+  <style>
+    :root {
+      --color-accent: #f47c20;
+      --color-accent-hover: #de6e18;
+      --color-accent-soft: #fff3e8;
+      --color-text: #171717;
+      --color-muted: #666666;
+      --color-border: #e9e9e9;
+      --color-bg: #fafafa;
+      --font-display: Georgia, "Times New Roman", serif;
+      --font-body: Inter, Arial, Helvetica, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--color-bg);
+      color: var(--color-text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page-card {
+      background: #ffffff;
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    /* ── Header ── */
+    .page-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: var(--color-muted);
+      font-size: 1.2rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .back-btn:hover { color: var(--color-accent); }
+
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* ── Error box ── */
+    .error-box {
+      display: none;
+      background: #fff0f0;
+      border: 1px solid #ffcccc;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      color: #c0392b;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* ── Add New Student button ── */
+    .btn-add {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 52px;
+      background: var(--color-accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: var(--font-body);
+      margin-bottom: 16px;
+    }
+
+    .btn-add:hover { background: var(--color-accent-hover); }
+
+    .btn-add-icon {
+      font-size: 1.3rem;
+      line-height: 1;
+      font-weight: 400;
+    }
+
+    /* ── Filter row ── */
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 0 2px;
+    }
+
+    .filter-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--color-accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .filter-row label {
+      font-size: 0.88rem;
+      color: var(--color-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* ── Student list ── */
+    .student-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .student-row {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      background: #fff;
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      text-align: left;
+    }
+
+    .student-row:hover {
+      border-color: var(--color-accent);
+      background: var(--color-accent-soft);
+    }
+
+    .student-row.inactive {
+      opacity: 0.45;
+    }
+
+    .student-row.inactive:hover {
+      opacity: 0.7;
+    }
+
+    .student-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--color-text);
+      line-height: 1.3;
+    }
+
+    .student-status {
+      font-size: 0.78rem;
+      color: var(--color-muted);
+      margin-top: 3px;
+      text-transform: capitalize;
+    }
+
+    /* ── Loading / empty states ── */
+    .state-message {
+      text-align: center;
+      font-size: 0.92rem;
+      color: var(--color-muted);
+      padding: 28px 0;
+    }
+
+    /* ── Edit/Create view (stub) ── */
+    #view-edit {
+      display: none;
+    }
+
+    .edit-stub {
+      text-align: center;
+      padding: 32px 0;
+      color: var(--color-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .edit-stub strong {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      color: var(--color-text);
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-card">
+
+    <!-- ── VIEW 1: Student List ── -->
+    <div id="view-list">
+
+      <div class="page-header">
+        <button class="back-btn" id="btn-back-menu" title="Back to menu">&#8592;</button>
+        <span class="page-title">Manage Students</span>
+      </div>
+
+      <div id="error-box" class="error-box"></div>
+
+      <button class="btn-add" id="btn-add-student">
+        <span class="btn-add-icon">+</span> Add New Student
+      </button>
+
+      <div class="filter-row">
+        <input type="checkbox" id="chk-active-only" checked />
+        <label for="chk-active-only">Show Active Only</label>
+      </div>
+
+      <div class="student-list" id="student-list">
+        <div class="state-message" id="list-state">Loading students...</div>
+      </div>
+
+    </div>
+
+    <!-- ── VIEW 2: Edit / Create (stub) ── -->
+    <div id="view-edit">
+
+      <div class="page-header">
+        <button class="back-btn" id="btn-back-list" title="Back to students">&#8592;</button>
+        <span class="page-title" id="edit-title">Student</span>
+      </div>
+
+      <div class="edit-stub">
+        <strong id="edit-stub-name"></strong>
+        Edit / Create screen coming next.
+      </div>
+
+    </div>
+
+  </div><!-- end page-card -->
+
+  <script type="module">
+    import { supabase } from '/assets/app.js';
+
+    // ── Auth guard ──
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      window.location.href = '/wunderkeys/';
+      throw new Error('Not authenticated');
+    }
+
+    const teacherId  = sessionStorage.getItem('teacher_id');
+    const seriesSlug = sessionStorage.getItem('series_slug');
+
+    if (!teacherId) {
+      window.location.href = '/wunderkeys/';
+      throw new Error('No teacher_id in session');
+    }
+
+    // ── Elements ──
+    const viewList       = document.getElementById('view-list');
+    const viewEdit       = document.getElementById('view-edit');
+    const studentList    = document.getElementById('student-list');
+    const listState      = document.getElementById('list-state');
+    const errorBox       = document.getElementById('error-box');
+    const chkActiveOnly  = document.getElementById('chk-active-only');
+    const editTitle      = document.getElementById('edit-title');
+    const editStubName   = document.getElementById('edit-stub-name');
+
+    // ── State ──
+    let allStudents = [];
+
+    // ── Helpers ──
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = 'block';
+    }
+
+    function clearError() {
+      errorBox.textContent = '';
+      errorBox.style.display = 'none';
+    }
+
+    function showListView() {
+      viewEdit.style.display = 'none';
+      viewList.style.display = 'block';
+    }
+
+    function showEditView(student) {
+      // student is null for Add New
+      const isNew = student === null;
+      editTitle.textContent     = isNew ? 'Add New Student' : 'Edit Student';
+      editStubName.textContent  = isNew ? 'New Student' : student.safe_name;
+      viewList.style.display    = 'none';
+      viewEdit.style.display    = 'block';
+    }
+
+    // ── Render student list ──
+    function renderList() {
+      const activeOnly = chkActiveOnly.checked;
+
+      const filtered = activeOnly
+        ? allStudents.filter(s => s.student_status === 'active')
+        : allStudents;
+
+      studentList.innerHTML = '';
+
+      if (filtered.length === 0) {
+        const msg = document.createElement('div');
+        msg.className = 'state-message';
+        msg.textContent = activeOnly
+          ? 'No active students. Add a new student or uncheck Show Active Only to see all.'
+          : 'No students found. Add a new student to get started.';
+        studentList.appendChild(msg);
+        return;
+      }
+
+      // Sort: active first (alpha), then inactive (alpha)
+      const sorted = [...filtered].sort((a, b) => {
+        const aActive = a.student_status === 'active' ? 0 : 1;
+        const bActive = b.student_status === 'active' ? 0 : 1;
+        if (aActive !== bActive) return aActive - bActive;
+        return a.safe_name.localeCompare(b.safe_name);
+      });
+
+      sorted.forEach(student => {
+        const row = document.createElement('button');
+        row.className = 'student-row' + (student.student_status !== 'active' ? ' inactive' : '');
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'student-name';
+        nameEl.textContent = student.safe_name;
+
+        const statusEl = document.createElement('div');
+        statusEl.className = 'student-status';
+        statusEl.textContent = student.student_status;
+
+        row.appendChild(nameEl);
+        row.appendChild(statusEl);
+        row.addEventListener('click', () => showEditView(student));
+        studentList.appendChild(row);
+      });
+    }
+
+    // ── Load students from Supabase ──
+    async function loadStudents() {
+      listState.textContent = 'Loading students...';
+      clearError();
+
+      const { data, error } = await supabase
+        .from('students')
+        .select('student_id, safe_name, student_status')
+        .eq('teacher_id', teacherId)
+        .order('safe_name', { ascending: true });
+
+      if (error) {
+        listState.style.display = 'none';
+        showError('Could not load students. Please try again.');
+        return;
+      }
+
+      allStudents = data || [];
+      listState.style.display = 'none';
+      renderList();
+    }
+
+    // ── Event listeners ──
+    chkActiveOnly.addEventListener('change', renderList);
+
+    document.getElementById('btn-add-student').addEventListener('click', () => {
+      clearError();
+      showEditView(null);
+    });
+
+    document.getElementById('btn-back-list').addEventListener('click', showListView);
+
+    document.getElementById('btn-back-menu').addEventListener('click', () => {
+      window.location.href = '/main_menu.html';
+    });
+
+    // ── Init ──
+    await loadStudents();
+  </script>
+
+</body>
+</html>
