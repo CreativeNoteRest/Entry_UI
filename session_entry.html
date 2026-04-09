@@ -515,9 +515,10 @@
 
   // 7. Entry log rendering
   function appendEntryToLog(text, isoTimestamp) {
+    const opts = { hour: '2-digit', minute: '2-digit', timeZone: teacherTimezone };
     const time = isoTimestamp
-      ? new Date(isoTimestamp).toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' })
-      : new Date().toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' });
+      ? new Date(isoTimestamp).toLocaleTimeString('en-CA', opts)
+      : new Date().toLocaleTimeString('en-CA', opts);
 
     const item = document.createElement('div');
     item.className = 'entry-item';
