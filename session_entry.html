@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Lesson Entry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:       #E07B2A;
+      --accent-light: #FDF3EA;
+      --accent-dark:  #B85E15;
+      --surface:      #FAFAF8;
+      --card:         #FFFFFF;
+      --border:       #E8E4DF;
+      --text-primary: #1A1714;
+      --text-secondary:#6B6560;
+      --text-muted:   #A09A94;
+      --danger:       #C0392B;
+      --danger-light: #FDECEA;
+      --success:      #2D7D46;
+      --success-light:#EAF5ED;
+      --radius:       12px;
+      --shadow-sm:    0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:    0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout shell ─────────────────────────────────────────── */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh; /* dynamic viewport height -- keyboard-aware */
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ───────────────────────────────────────────────── */
+    .page-header {
+      flex-shrink: 0;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header-series {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .header-student {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+
+    .header-meta {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+    }
+
+    /* ── Entry log ────────────────────────────────────────────── */
+    .entry-log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .entry-log:empty::after {
+      content: 'Notes will appear here as you type them.';
+      display: block;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 40px;
+    }
+
+    .entry-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      box-shadow: var(--shadow-sm);
+      animation: slideIn 0.18s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .entry-timestamp {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .entry-text {
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+
+    /* ── Entry counter ────────────────────────────────────────── */
+    .entry-counter {
+      flex-shrink: 0;
+      text-align: center;
+      padding: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .entry-counter span {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ── Input area ───────────────────────────────────────────── */
+    .input-area {
+      flex-shrink: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px 16px;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    .entry-textarea {
+      flex: 1;
+      min-height: 48px;
+      max-height: 120px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: var(--surface);
+      resize: none;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .entry-textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(224,123,42,0.12);
+      background: #fff;
+    }
+
+    .entry-textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Mic button */
+    .btn-mic {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-mic:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .btn-mic.listening {
+      border-color: var(--danger);
+      background: var(--danger-light);
+      color: var(--danger);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.25); }
+      50%       { box-shadow: 0 0 0 6px rgba(192,57,43,0); }
+    }
+
+    .btn-mic svg { width: 20px; height: 20px; }
+
+    /* Submit button */
+    .btn-submit {
+      height: 48px;
+      padding: 0 20px;
+      border-radius: var(--radius);
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-submit:hover  { background: var(--accent-dark); }
+    .btn-submit:active { transform: scale(0.97); }
+    .btn-submit:disabled {
+      background: var(--border);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Status / error messages ──────────────────────────────── */
+    .status-bar {
+      flex-shrink: 0;
+      padding: 0 16px;
+    }
+
+    .status-msg {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .status-msg.show { display: flex; }
+    .status-msg.error   { background: var(--danger-light); color: var(--danger); }
+    .status-msg.success { background: var(--success-light); color: var(--success); }
+
+    /* ── Close lesson button ──────────────────────────────────── */
+    .footer-bar {
+      flex-shrink: 0;
+      padding: 0 16px 12px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-close-lesson {
+      padding: 10px 18px;
+      border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-close-lesson:hover {
+      border-color: var(--text-secondary);
+      color: var(--text-primary);
+    }
+
+    /* ── Auth guard overlay ───────────────────────────────────── */
+    #auth-loading {
+      position: fixed; inset: 0;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- Auth loading overlay -- hidden once auth check passes -->
+<div id="auth-loading"><div class="spinner"></div></div>
+
+<div class="app-shell" id="app-shell" style="display:none;">
+
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-series" id="hdr-series">Creative Note</div>
+    <div class="header-student" id="hdr-student">Loading...</div>
+    <div class="header-meta" id="hdr-meta"></div>
+  </header>
+
+  <!-- Status bar (errors / feedback) -->
+  <div class="status-bar">
+    <div class="status-msg" id="status-msg">
+      <span id="status-text"></span>
+    </div>
+  </div>
+
+  <!-- Scrolling entry log -->
+  <div class="entry-log" id="entry-log" role="log" aria-live="polite" aria-label="Lesson notes"></div>
+
+  <!-- Entry counter -->
+  <div class="entry-counter" id="entry-counter" style="display:none;">
+    <span id="count-num">0</span> note<span id="count-plural">s</span> this lesson
+  </div>
+
+  <!-- Input area -->
+  <div class="input-area">
+    <div class="input-row">
+      <!-- Mic button (browser STT -- stubbed error handling) -->
+      <button class="btn-mic" id="btn-mic" title="Voice input" aria-label="Start voice input">
+        <!-- Mic icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4z"/>
+          <path d="M19 10a7 7 0 0 1-14 0"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8"  y1="23" x2="16" y2="23"/>
+        </svg>
+      </button>
+
+      <textarea
+        class="entry-textarea"
+        id="entry-input"
+        placeholder="Type a note about this lesson..."
+        rows="1"
+        aria-label="Lesson note"
+      ></textarea>
+
+      <button class="btn-submit" id="btn-submit" disabled>Save</button>
+    </div>
+  </div>
+
+  <!-- Footer: Close Lesson stub -->
+  <div class="footer-bar">
+    <button class="btn-close-lesson" id="btn-close-lesson">Close Lesson</button>
+  </div>
+
+</div><!-- /app-shell -->
+
+<script type="module">
+  import { supabase, requireAuth, applyBranding, showError, clearError } from '/assets/app.js';
+
+  // ── 1. Auth guard ──────────────────────────────────────────────
+  await requireAuth();
+
+  // ── 2. Session context from sessionStorage ─────────────────────
+  const teacherId   = sessionStorage.getItem('teacher_id');
+  const sessionId   = sessionStorage.getItem('session_id');
+  const studentId   = sessionStorage.getItem('student_id');
+  const studentName = sessionStorage.getItem('student_name');
+  const seriesId    = sessionStorage.getItem('series_id');
+
+  // If any required context is missing, send back to main menu.
+  // This covers the case where someone navigates directly to this URL
+  // without going through session open.
+  if (!teacherId || !sessionId || !studentId) {
+    window.location.href = '/main_menu.html';
+  }
+
+  // ── 3. Branding + header ───────────────────────────────────────
+  applyBranding();
+
+  const today = new Date().toLocaleDateString('en-CA', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  document.getElementById('hdr-student').textContent = studentName || 'Student';
+  document.getElementById('hdr-meta').textContent    = today;
+
+  // Series label pulled from branding (applyBranding sets data-series-name on body,
+  // or fall back to sessionStorage slug)
+  const seriesLabel = document.body.dataset.seriesName
+    || sessionStorage.getItem('series_slug')?.replace(/-/g, ' ')
+    || 'Creative Note';
+  document.getElementById('hdr-series').textContent = seriesLabel.toUpperCase();
+
+  // Show the app now that context is confirmed
+  document.getElementById('auth-loading').style.display = 'none';
+  document.getElementById('app-shell').style.display    = 'flex';
+
+  // ── 4. Entry sequence tracking ────────────────────────────────
+  // Query MAX entry_sequence for this session on load, then increment in memory.
+  // This is safe because the session is single-teacher, single-tab.
+  let nextSequence = 1;
+
+  try {
+    const { data, error } = await supabase
+      .from('session_entries')
+      .select('entry_sequence')
+      .eq('session_id', sessionId)
+      .order('entry_sequence', { ascending: false })
+      .limit(1);
+
+    if (!error && data && data.length > 0) {
+      nextSequence = data[0].entry_sequence + 1;
+      // Render any existing entries (e.g. teacher resumed a session)
+      await loadExistingEntries();
+    }
+  } catch (e) {
+    // Non-fatal -- sequence starts at 1, existing entries not shown.
+    console.warn('Could not fetch existing entries:', e);
+  }
+
+  // ── 5. Load existing entries (resume case) ────────────────────
+  async function loadExistingEntries() {
+    const { data, error } = await supabase
+      .from('session_entries')
+      .select('entry_sequence, entry_text, created_at')
+      .eq('session_id', sessionId)
+      .eq('entry_source', 'teacher')
+      .order('entry_sequence', { ascending: true });
+
+    if (error || !data) return;
+    data.forEach(row => appendEntryToLog(row.entry_text, row.created_at));
+  }
+
+  // ── 6. Entry log rendering ────────────────────────────────────
+  const entryLog = document.getElementById('entry-log');
+
+  function appendEntryToLog(text, isoTimestamp) {
+    const time = isoTimestamp
+      ? new Date(isoTimestamp).toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' })
+      : new Date().toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' });
+
+    const item = document.createElement('div');
+    item.className = 'entry-item';
+    item.innerHTML = `
+      <div class="entry-timestamp">${time}</div>
+      <div class="entry-text">${escapeHtml(text)}</div>
+    `;
+    entryLog.appendChild(item);
+    entryLog.scrollTop = entryLog.scrollHeight;
+    updateCounter();
+  }
+
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function updateCounter() {
+    const count = entryLog.querySelectorAll('.entry-item').length;
+    const counterEl = document.getElementById('entry-counter');
+    counterEl.style.display = count > 0 ? 'block' : 'none';
+    document.getElementById('count-num').textContent    = count;
+    document.getElementById('count-plural').textContent = count === 1 ? '' : 's';
+  }
+
+  // ── 7. Status messaging ───────────────────────────────────────
+  let statusTimer = null;
+
+  function showStatus(msg, type = 'error', autoDismiss = false) {
+    const bar  = document.getElementById('status-msg');
+    const text = document.getElementById('status-text');
+    bar.className  = `status-msg show ${type}`;
+    text.textContent = msg;
+    if (statusTimer) clearTimeout(statusTimer);
+    if (autoDismiss) {
+      statusTimer = setTimeout(() => { bar.className = 'status-msg'; }, 3000);
+    }
+  }
+
+  function hideStatus() {
+    document.getElementById('status-msg').className = 'status-msg';
+  }
+
+  // ── 8. Write entry to Supabase ────────────────────────────────
+  async function writeEntry(text) {
+    const btnSubmit = document.getElementById('btn-submit');
+    btnSubmit.disabled = true;
+    hideStatus();
+
+    const row = {
+      series_id:      seriesId,
+      session_id:     sessionId,
+      teacher_id:     teacherId,
+      student_id:     studentId,
+      entry_sequence: nextSequence,
+      entry_text:     text,
+      entry_source:   'teacher',
+      exact_wording:  false,
+    };
+
+    const { error } = await supabase
+      .from('session_entries')
+      .insert(row);
+
+    if (error) {
+      showStatus('Note could not be saved. Please try again.', 'error');
+      btnSubmit.disabled = false;
+      return false;
+    }
+
+    nextSequence++;
+    appendEntryToLog(text);
+    return true;
+  }
+
+  // ── 9. Input handling ─────────────────────────────────────────
+  const textarea  = document.getElementById('entry-input');
+  const btnSubmit = document.getElementById('btn-submit');
+
+  // Auto-expand textarea
+  textarea.addEventListener('input', () => {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    btnSubmit.disabled = textarea.value.trim().length === 0;
+  });
+
+  // Submit on Enter (not Shift+Enter), for desktop convenience
+  textarea.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (!btnSubmit.disabled) handleSubmit();
+    }
+  });
+
+  btnSubmit.addEventListener('click', handleSubmit);
+
+  async function handleSubmit() {
+    const text = textarea.value.trim();
+    if (!text) return;
+
+    btnSubmit.disabled = true;
+    const ok = await writeEntry(text);
+
+    if (ok) {
+      textarea.value = '';
+      textarea.style.height = 'auto';
+      btnSubmit.disabled = true;
+      textarea.focus();
+    } else {
+      btnSubmit.disabled = false;
+    }
+  }
+
+  // ── 10. Browser mic (Web Speech API -- stub) ──────────────────
+  const btnMic = document.getElementById('btn-mic');
+
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    // Browser doesn't support STT -- hide the button silently
+    btnMic.style.display = 'none';
+  } else {
+    const recognition = new SpeechRecognition();
+    recognition.lang       = 'en-CA';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    let listening = false;
+
+    btnMic.addEventListener('click', () => {
+      if (listening) {
+        recognition.stop();
+        return;
+      }
+      recognition.start();
+    });
+
+    recognition.onstart = () => {
+      listening = true;
+      btnMic.classList.add('listening');
+      btnMic.setAttribute('aria-label', 'Stop voice input');
+      btnSubmit.disabled = true;
+    };
+
+    recognition.onresult = e => {
+      const transcript = e.results[0][0].transcript.trim();
+      if (transcript) {
+        textarea.value += (textarea.value ? ' ' : '') + transcript;
+        textarea.dispatchEvent(new Event('input'));
+      }
+    };
+
+    recognition.onend = () => {
+      listening = false;
+      btnMic.classList.remove('listening');
+      btnMic.setAttribute('aria-label', 'Start voice input');
+      btnSubmit.disabled = textarea.value.trim().length === 0;
+    };
+
+    // Stub: error handling, 3-strike, debounce -- deferred
+    recognition.onerror = () => {
+      listening = false;
+      btnMic.classList.remove('listening');
+      btnSubmit.disabled = textarea.value.trim().length === 0;
+    };
+  }
+
+  // ── 11. Close Lesson (stub) ───────────────────────────────────
+  document.getElementById('btn-close-lesson').addEventListener('click', () => {
+    // Stub -- session close flow not yet built.
+    // This will trigger the session close sequence when implemented.
+    console.log('Close Lesson tapped -- not yet implemented.');
+  });
+
+</script>
+</body>
+</html>
