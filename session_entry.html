@@ -149,6 +149,28 @@
       color: #C0BAB4;
     }
 
+    /* ── Inline edit state ────────────────────────────────────── */
+    .entry-item.editing {
+      background: #FFFDF9;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(224,123,42,0.12);
+    }
+
+    .entry-edit-textarea {
+      width: 100%;
+      min-height: 48px;
+      padding: 2px 0;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      resize: none;
+      overflow: hidden;
+    }
+
     /* ── Entry counter ────────────────────────────────────────── */
     .entry-counter {
       flex-shrink: 0;
@@ -544,36 +566,114 @@
 
     const isIgnored = text.startsWith('[IGNORE] ');
     const displayText = isIgnored ? text.slice(9) : text;
-    const seqLabel = sequence ? '#' + sequence + '    ' : '';
+    const seqLabel = sequence ? '#' + sequence + '    ' : '';
 
     const item = document.createElement('div');
     item.className = 'entry-item' + (isIgnored ? ' entry-ignored' : '');
-    item.dataset.entryId = entryId || '';
-    item.dataset.sequence = sequence || '';
-    item.dataset.ignored = isIgnored ? 'true' : 'false';
+    item.dataset.entryId   = entryId || '';
+    item.dataset.sequence  = sequence || '';
+    item.dataset.ignored   = isIgnored ? 'true' : 'false';
+    item.dataset.cleanText = displayText;
     item.innerHTML = `
       <div class="entry-timestamp">${seqLabel}${time}</div>
       <div class="entry-text">${escapeHtml(displayText)}</div>
     `;
     if (entryId) {
-      item.addEventListener('click', () => toggleIgnore(item));
+      attachEntryListeners(item);
     }
     entryLog.appendChild(item);
     entryLog.scrollTop = entryLog.scrollHeight;
     updateCounter();
   }
 
-  async function toggleIgnore(item) {
+  // Long-press + tap listeners
+  function attachEntryListeners(item) {
+    let pressTimer   = null;
+    let didLongPress = false;
+
+    function startPress() {
+      didLongPress = false;
+      pressTimer = setTimeout(() => {
+        didLongPress = true;
+        enterEditMode(item);
+      }, 500);
+    }
+
+    function cancelPress() { clearTimeout(pressTimer); }
+
+    function endPress() {
+      clearTimeout(pressTimer);
+      if (!didLongPress && !item.classList.contains('editing')) {
+        toggleIgnore(item);
+      }
+      didLongPress = false;
+    }
+
+    item.addEventListener('mousedown',  startPress);
+    item.addEventListener('touchstart', startPress,  { passive: true });
+    item.addEventListener('mouseleave', cancelPress);
+    item.addEventListener('touchmove',  cancelPress, { passive: true });
+    item.addEventListener('mouseup',    endPress);
+    item.addEventListener('touchend',   endPress);
+  }
+
+  // Inline edit mode
+  function enterEditMode(item) {
+    if (item.classList.contains('editing')) return;
+    const cleanText = item.dataset.cleanText;
+    const textEl    = item.querySelector('.entry-text');
+
+    item.classList.remove('entry-ignored');
+    item.classList.add('editing');
+
+    const editArea = document.createElement('textarea');
+    editArea.className = 'entry-edit-textarea';
+    editArea.value = cleanText;
+    editArea.style.height = 'auto';
+    textEl.replaceWith(editArea);
+    editArea.style.height = editArea.scrollHeight + 'px';
+    editArea.focus();
+    editArea.select();
+
+    editArea.addEventListener('input', () => {
+      editArea.style.height = 'auto';
+      editArea.style.height = editArea.scrollHeight + 'px';
+    });
+
+    editArea.addEventListener('blur', () => saveEdit(item, editArea));
+  }
+
+  async function saveEdit(item, editArea) {
     const entryId = item.dataset.entryId;
+    const newText = editArea.value.trim() || item.dataset.cleanText;
+
+    const displayDiv = document.createElement('div');
+    displayDiv.className = 'entry-text';
+    displayDiv.textContent = newText;
+    editArea.replaceWith(displayDiv);
+
+    item.classList.remove('editing', 'entry-ignored');
+    item.dataset.ignored   = 'false';
+    item.dataset.cleanText = newText;
+
+    const { error } = await supabase
+      .from('session_entries')
+      .update({ entry_text: newText })
+      .eq('entry_id', entryId);
+
+    if (error) {
+      showStatus('Could not save edit. Please try again.', 'error', true);
+    }
+  }
+
+  // Toggle ignore (short tap)
+  async function toggleIgnore(item) {
+    const entryId  = item.dataset.entryId;
     if (!entryId) return;
 
     const isIgnored = item.dataset.ignored === 'true';
-    const textEl = item.querySelector('.entry-text');
-    const currentText = textEl.textContent;
-
-    const newText = isIgnored
-      ? currentText                      // removing [IGNORE]
-      : '[IGNORE] ' + currentText;       // adding [IGNORE]
+    const cleanText = item.dataset.cleanText;
+    const newText   = isIgnored ? cleanText : '[IGNORE] ' + cleanText;
 
     const { error } = await supabase
       .from('session_entries')
