@@ -376,24 +376,21 @@
 <script type="module">
   import { supabase, requireAuth, applyBranding, showError, clearError } from '/assets/app.js';
 
-  // ── 1. Auth guard ──────────────────────────────────────────────
+  // 1. Auth guard
   await requireAuth();
 
-  // ── 2. Session context from sessionStorage ─────────────────────
+  // 2. Session context from sessionStorage
   const teacherId   = sessionStorage.getItem('teacher_id');
   const sessionId   = sessionStorage.getItem('session_id');
   const studentId   = sessionStorage.getItem('student_id');
   const studentName = sessionStorage.getItem('student_name');
   const seriesId    = sessionStorage.getItem('series_id');
 
-  // If any required context is missing, send back to main menu.
-  // This covers the case where someone navigates directly to this URL
-  // without going through session open.
   if (!teacherId || !sessionId || !studentId) {
     window.location.href = '/main_menu.html';
   }
 
-  // ── 3. Branding + header ───────────────────────────────────────
+  // 3. Branding + header
   applyBranding();
 
   const today = new Date().toLocaleDateString('en-CA', {
@@ -403,20 +400,59 @@
   document.getElementById('hdr-student').textContent = studentName || 'Student';
   document.getElementById('hdr-meta').textContent    = today;
 
-  // Series label pulled from branding (applyBranding sets data-series-name on body,
-  // or fall back to sessionStorage slug)
   const seriesLabel = document.body.dataset.seriesName
     || sessionStorage.getItem('series_slug')?.replace(/-/g, ' ')
     || 'Creative Note';
   document.getElementById('hdr-series').textContent = seriesLabel.toUpperCase();
 
-  // Show the app now that context is confirmed
   document.getElementById('auth-loading').style.display = 'none';
   document.getElementById('app-shell').style.display    = 'flex';
 
-  // ── 4. Entry sequence tracking ────────────────────────────────
-  // Query MAX entry_sequence for this session on load, then increment in memory.
-  // This is safe because the session is single-teacher, single-tab.
+  // 4. Teacher timezone -- fetched once, used to calculate purge_after on every insert
+  let teacherTimezone = 'America/Toronto';
+
+  try {
+    const { data: tzData, error: tzError } = await supabase
+      .from('teachers')
+      .select('timezone')
+      .eq('teacher_id', teacherId)
+      .single();
+
+    if (!tzError && tzData && tzData.timezone) {
+      teacherTimezone = tzData.timezone;
+    }
+  } catch (e) {
+    console.warn('Could not fetch teacher timezone, using fallback:', e);
+  }
+
+  function calcPurgeAfter() {
+    // Build "tomorrow at 02:00" in the teacher's IANA timezone, return as UTC ISO string.
+    const now = new Date();
+
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: teacherTimezone,
+      year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(now);
+
+    const y = parts.find(p => p.type === 'year').value;
+    const m = parts.find(p => p.type === 'month').value;
+    const d = parseInt(parts.find(p => p.type === 'day').value, 10);
+
+    const offsetPart = new Intl.DateTimeFormat('en-CA', {
+      timeZone: teacherTimezone,
+      timeZoneName: 'shortOffset'
+    }).formatToParts(now).find(p => p.type === 'timeZoneName').value;
+
+    const tomorrowDay = String(d + 1).padStart(2, '0');
+    const isoStr = `${y}-${m}-${tomorrowDay}T02:00:00${offsetPart.replace('GMT', '')}`;
+    const result = new Date(isoStr);
+
+    return isNaN(result.getTime())
+      ? new Date(Date.now() + 20 * 60 * 60 * 1000).toISOString()
+      : result.toISOString();
+  }
+
+  // 5. Entry sequence tracking
   let nextSequence = 1;
 
   try {
@@ -429,15 +465,13 @@
 
     if (!error && data && data.length > 0) {
       nextSequence = data[0].entry_sequence + 1;
-      // Render any existing entries (e.g. teacher resumed a session)
       await loadExistingEntries();
     }
   } catch (e) {
-    // Non-fatal -- sequence starts at 1, existing entries not shown.
     console.warn('Could not fetch existing entries:', e);
   }
 
-  // ── 5. Load existing entries (resume case) ────────────────────
+  // 6. Load existing entries (resume case)
   async function loadExistingEntries() {
     const { data, error } = await supabase
       .from('session_entries')
@@ -450,7 +484,7 @@
     data.forEach(row => appendEntryToLog(row.entry_text, row.created_at));
   }
 
-  // ── 6. Entry log rendering ────────────────────────────────────
+  // 7. Entry log rendering
   const entryLog = document.getElementById('entry-log');
 
   function appendEntryToLog(text, isoTimestamp) {
@@ -485,17 +519,18 @@
     document.getElementById('count-plural').textContent = count === 1 ? '' : 's';
   }
 
-  // ── 7. Status messaging ───────────────────────────────────────
+  // 8. Status messaging
   let statusTimer = null;
 
-  function showStatus(msg, type = 'error', autoDismiss = false) {
+  function showStatus(msg, type, autoDismiss) {
+    type = type || 'error';
     const bar  = document.getElementById('status-msg');
     const text = document.getElementById('status-text');
-    bar.className  = `status-msg show ${type}`;
+    bar.className  = 'status-msg show ' + type;
     text.textContent = msg;
     if (statusTimer) clearTimeout(statusTimer);
     if (autoDismiss) {
-      statusTimer = setTimeout(() => { bar.className = 'status-msg'; }, 3000);
+      statusTimer = setTimeout(function() { bar.className = 'status-msg'; }, 3000);
     }
   }
 
@@ -503,7 +538,7 @@
     document.getElementById('status-msg').className = 'status-msg';
   }
 
-  // ── 8. Write entry to Supabase ────────────────────────────────
+  // 9. Write entry to Supabase
   async function writeEntry(text) {
     const btnSubmit = document.getElementById('btn-submit');
     btnSubmit.disabled = true;
@@ -518,6 +553,7 @@
       entry_text:     text,
       entry_source:   'teacher',
       exact_wording:  false,
+      purge_after:    calcPurgeAfter()
     };
 
     const { error } = await supabase
@@ -525,7 +561,7 @@
       .insert(row);
 
     if (error) {
-      showStatus('Note could not be saved. Please try again.', 'error');
+      showStatus('Note could not be saved. Please try again.', 'error', false);
       btnSubmit.disabled = false;
       return false;
     }
@@ -535,19 +571,17 @@
     return true;
   }
 
-  // ── 9. Input handling ─────────────────────────────────────────
+  // 10. Input handling
   const textarea  = document.getElementById('entry-input');
   const btnSubmit = document.getElementById('btn-submit');
 
-  // Auto-expand textarea
-  textarea.addEventListener('input', () => {
+  textarea.addEventListener('input', function() {
     textarea.style.height = 'auto';
     textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
     btnSubmit.disabled = textarea.value.trim().length === 0;
   });
 
-  // Submit on Enter (not Shift+Enter), for desktop convenience
-  textarea.addEventListener('keydown', e => {
+  textarea.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (!btnSubmit.disabled) handleSubmit();
@@ -573,39 +607,35 @@
     }
   }
 
-  // ── 10. Browser mic (Web Speech API -- stub) ──────────────────
+  // 11. Browser mic (Web Speech API -- error handling stubbed)
   const btnMic = document.getElementById('btn-mic');
 
   const SpeechRecognition =
     window.SpeechRecognition || window.webkitSpeechRecognition;
 
   if (!SpeechRecognition) {
-    // Browser doesn't support STT -- hide the button silently
     btnMic.style.display = 'none';
   } else {
     const recognition = new SpeechRecognition();
-    recognition.lang       = 'en-CA';
-    recognition.continuous = false;
+    recognition.lang           = 'en-CA';
+    recognition.continuous     = false;
     recognition.interimResults = false;
 
     let listening = false;
 
-    btnMic.addEventListener('click', () => {
-      if (listening) {
-        recognition.stop();
-        return;
-      }
+    btnMic.addEventListener('click', function() {
+      if (listening) { recognition.stop(); return; }
       recognition.start();
     });
 
-    recognition.onstart = () => {
+    recognition.onstart = function() {
       listening = true;
       btnMic.classList.add('listening');
       btnMic.setAttribute('aria-label', 'Stop voice input');
       btnSubmit.disabled = true;
     };
 
-    recognition.onresult = e => {
+    recognition.onresult = function(e) {
       const transcript = e.results[0][0].transcript.trim();
       if (transcript) {
         textarea.value += (textarea.value ? ' ' : '') + transcript;
@@ -613,28 +643,26 @@
       }
     };
 
-    recognition.onend = () => {
+    recognition.onend = function() {
       listening = false;
       btnMic.classList.remove('listening');
       btnMic.setAttribute('aria-label', 'Start voice input');
       btnSubmit.disabled = textarea.value.trim().length === 0;
     };
 
-    // Stub: error handling, 3-strike, debounce -- deferred
-    recognition.onerror = () => {
+    recognition.onerror = function() {
       listening = false;
       btnMic.classList.remove('listening');
       btnSubmit.disabled = textarea.value.trim().length === 0;
     };
   }
 
-  // ── 11. Close Lesson (stub) ───────────────────────────────────
-  document.getElementById('btn-close-lesson').addEventListener('click', () => {
-    // Stub -- session close flow not yet built.
-    // This will trigger the session close sequence when implemented.
+  // 12. Close Lesson (stub)
+  document.getElementById('btn-close-lesson').addEventListener('click', function() {
     console.log('Close Lesson tapped -- not yet implemented.');
   });
 
 </script>
+
 </body>
 </html>
